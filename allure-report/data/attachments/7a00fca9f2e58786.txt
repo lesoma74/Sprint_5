@@ -1,3 +1,0 @@
-HTTP/1.1 200 <MagicMock name='put().reason' id='1732725416464'>
-ok: True
-

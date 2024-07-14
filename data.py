@@ -1,5 +1,4 @@
-
-
+# Данные для курьеров
 valid_courier = {
     "login": "ninja",
     "password": "1234",
@@ -33,7 +32,8 @@ existing_login_payload = {
     "firstName": "newFirstName"
 }
 
-order_with_color_BLACK = {
+# Базовый словарь заказа
+base_order = {
     "firstName": "Naruto",
     "lastName": "Uchiha",
     "address": "Konoha, 142 apt.",
@@ -42,45 +42,23 @@ order_with_color_BLACK = {
     "rentTime": 5,
     "deliveryDate": "2020-06-06",
     "comment": "Saske, come back to Konoha",
-    "color": ["BLACK"]
+    "color": []
 }
 
-order_with_color_GREY = {
-    "firstName": "Naruto",
-    "lastName": "Uchiha",
-    "address": "Konoha, 142 apt.",
-    "metroStation": 4,
-    "phone": "+7 800 355 35 35",
-    "rentTime": 5,
-    "deliveryDate": "2020-06-06",
-    "comment": "Saske, come back to Konoha",
-    "color": ["GREY"]
-}
+# Создание различных заказов путем обновления базового словаря
+order_with_color_BLACK = base_order.copy()
+order_with_color_BLACK["color"] = ["BLACK"]
 
-order_with_colors_BOTH = {
-    "firstName": "Naruto",
-    "lastName": "Uchiha",
-    "address": "Konoha, 142 apt.",
-    "metroStation": 4,
-    "phone": "+7 800 355 35 35",
-    "rentTime": 5,
-    "deliveryDate": "2020-06-06",
-    "comment": "Saske, come back to Konoha",
-    "color": ["BLACK", "GREY"]
-}
+order_with_color_GREY = base_order.copy()
+order_with_color_GREY["color"] = ["GREY"]
 
-order_without_color = {
-    "firstName": "Naruto",
-    "lastName": "Uchiha",
-    "address": "Konoha, 142 apt.",
-    "metroStation": 4,
-    "phone": "+7 800 355 35 35",
-    "rentTime": 5,
-    "deliveryDate": "2020-06-06",
-    "comment": "Saske, come back to Konoha"
-}
+order_with_colors_BOTH = base_order.copy()
+order_with_colors_BOTH["color"] = ["BLACK", "GREY"]
 
-# Orders list data
+order_without_color = base_order.copy()
+order_without_color.pop("color")
+
+# Данные для списка заказов
 orders_list_response = {
     "orders": [
         {
@@ -152,4 +130,20 @@ orders_list_not_found_response = {
   "message": "Курьер с идентификатором {courierId} не найден"
 }
 
+orders = [
+    {
+        "order_id": 1,
+        "courier_id": 213
+    },
+    {
+        "order_id": 2,
+        "courier_id": 214
+    }
+]
 
+class ResponseMessages:
+    COURIER_CREATED = {"message": "Курьер успешно создан"}
+    MISSING_COURIER_ID = {"message": "Недостаточно данных для поиска"}
+    INVALID_COURIER_ID = {"message": "Курьера с таким id не существует"}
+    MISSING_ORDER_ID = {"message": "Недостаточно данных для поиска"}
+    INVALID_ORDER_ID = {"message": "Заказа с таким id не существует"}

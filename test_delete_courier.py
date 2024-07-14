@@ -1,47 +1,35 @@
-import unittest
-from unittest.mock import patch
+import pytest
+import allure
 import requests
 from test_setup import TestSetup
 
 class TestDeleteCourier(TestSetup):
 
-    @patch('requests.delete')
-    def test_delete_courier_successful(self, mock_delete):
-        mock_delete.return_value.status_code = 200
-        mock_delete.return_value.json.return_value = {"ok": True}
+    @allure.title("Удаление существующего курьера")
+    def test_delete_courier_successful(self):
+        courier_id = self.create_courier()
 
-        courier_id = "3"
         response = requests.delete(f"{self.base_url}/courier/{courier_id}")
 
-        self.assertEqual(response.status_code, 200, "Expected status code 200 for successful courier deletion")
-        self.assertEqual(response.json(), {"ok": True}, "Expected {'ok': True} in response for successful deletion")
-        print(f"HTTP/1.1 {response.status_code} {response.reason}")
-        print(response.json())
+        assert response.status_code == 200, f"Expected status code 200 for successful courier deletion, got {response.status_code}"
+        assert response.json() == {
+            "ok": True}, f"Expected {{'ok': True}} in response for successful deletion, got {response.json()}"
 
-    @patch('requests.delete')
-    def test_delete_courier_missing_id(self, mock_delete):
-        mock_delete.return_value.status_code = 400
-        mock_delete.return_value.json.return_value = {"message": "Недостаточно данных для удаления курьера"}
+    @allure.title("Удаление курьера с незаполненным id")
+    def test_delete_courier_missing_id(self):
+        expected_response = {"code": 404, "message": "Not Found."}
 
         response = requests.delete(f"{self.base_url}/courier/")
 
-        self.assertEqual(response.status_code, 400, "Expected status code 400 for missing courier id")
-        self.assertEqual(response.json(), {"message": "Недостаточно данных для удаления курьера"}, "Expected error message for missing courier id")
-        print(f"HTTP/1.1 {response.status_code} {response.reason}")
-        print(response.json())
+        assert response.status_code == 404, f"Expected status code 404 for missing courier id, got {response.status_code}"
+        assert response.json() == expected_response, f"Expected {expected_response} in response for missing courier id, got {response.json()}"
 
-    @patch('requests.delete')
-    def test_delete_courier_invalid_id(self, mock_delete):
-        mock_delete.return_value.status_code = 404
-        mock_delete.return_value.json.return_value = {"message": "Курьера с таким id нет"}
+    @allure.title("Удаление курьера с несуществующим id")
+    def test_delete_courier_invalid_id(self):
+        non_existent_courier_id = "999999"  # Assume this ID doesn't exist in the system
+        expected_response = {"code": 404, "message": "Курьера с таким id нет."}
 
-        courier_id = "999"
-        response = requests.delete(f"{self.base_url}/courier/{courier_id}")
+        response = requests.delete(f"{self.base_url}/courier/{non_existent_courier_id}")
 
-        self.assertEqual(response.status_code, 404, "Expected status code 404 for non-existent courier id")
-        self.assertEqual(response.json(), {"message": "Курьера с таким id нет"}, "Expected error message for non-existent courier id")
-        print(f"HTTP/1.1 {response.status_code} {response.reason}")
-        print(response.json())
-
-if __name__ == '__main__':
-    unittest.main(verbosity=2)
+        assert response.status_code == 404, f"Expected status code 404 for non-existent courier id, got {response.status_code}"
+        assert response.json() == expected_response, f"Expected {expected_response} in response for non-existent courier id, got {response.json()}"

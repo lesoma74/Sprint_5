@@ -1,82 +1,64 @@
-import unittest
-from unittest.mock import patch
+import pytest
+import allure
 import requests
+from data import order_with_color_BLACK
 from test_setup import TestSetup
 
-class TestGetOrderByTrack(TestSetup):
 
-    @patch('requests.get')
-    def test_get_order_by_track_successful(self, mock_get):
-        mock_get.return_value.status_code = 200
-        mock_get.return_value.json.return_value = {
-            "order": {
-                "id": 2,
-                "firstName": "Naruto",
-                "lastName": "Uzumaki",
-                "address": "Kanoha, 142 apt.",
-                "metroStation": "1",
-                "phone": "+7 800 355 35 35",
-                "rentTime": 5,
-                "deliveryDate": "2020-06-06T00:00:00.000Z",
-                "track": 4,
-                "status": 1,
-                "color": ["BLACK"],
-                "comment": "Saske, come back to Kanoha",
-                "cancelled": False,
-                "finished": False,
-                "inDelivery": False,
-                "courierFirstName": "Kaneki",
-                "createdAt": "2020-06-08T14:40:28.219Z",
-                "updatedAt": "2020-06-08T14:40:28.219Z"
-            }
-        }
+class TestOrderCreationAndRetrieval(TestSetup):
 
-        track_number = 123456
-        response = requests.get(f"{self.base_url}/orders/track", params={"t": track_number})
+    @allure.title("Получение заказа по его номеру")
+    def test_create_and_get_order_by_track_number(self):
+        # Создание заказа с определённым цветом (BLACK, например)
+        payload = order_with_color_BLACK
+        response = requests.post(self.base_url + '/orders', json=payload)
 
-        self.assertEqual(response.status_code, 200, "Expected status code 200 for successful order retrieval")
-        self.assertIn("order", response.json(), "Expected order object in response")
-        print(f"HTTP/1.1 {response.status_code} {response.reason}")
-        print(self.format_json(response.json()))
+        # Проверка успешности создания заказа
+        assert response.status_code == 201, "Expected status code 201 for successful order creation"
+        assert "track" in response.json(), "Response should contain 'track' for the order"
 
-    @patch('requests.get')
-    def test_get_order_by_track_missing_track_number(self, mock_get):
-        mock_get.return_value.status_code = 400
-        mock_get.return_value.json.return_value = {"message": "Недостаточно данных для поиска"}
+        # Получение трек номера созданного заказа
+        track_number = response.json()["track"]
+        assert track_number, "Expected a valid track number in response"
 
-        response = requests.get(f"{self.base_url}/orders/track")
 
-        self.assertEqual(response.status_code, 400, "Expected status code 400 for missing track number")
-        self.assertEqual(response.json(), {"message": "Недостаточно данных для поиска"}, "Expected error message for missing track number")
-        print(f"HTTP/1.1 {response.status_code} {response.reason}")
-        print(self.format_json(response.json()))
+        # Получение заказа по трек номеру
+        response = requests.get(f"{self.base_url}/orders/track?t={track_number}")
 
-    @patch('requests.get')
-    def test_get_order_by_track_invalid_track_number(self, mock_get):
-        mock_get.return_value.status_code = 404
-        mock_get.return_value.json.return_value = {"message": "Заказ не найден"}
+        # Проверка успешности получения заказа
+        assert response.status_code == 200, f"Expected status code 200, but got {response.status_code}"
+        assert "order" in response.json(), f"Expected 'order' field in response for order with track number {track_number}"
+        order_data = response.json()["order"]
+        assert "id" in order_data, "Expected 'id' field in order data"
 
-        track_number = 999999
-        response = requests.get(f"{self.base_url}/orders/track", params={"t": track_number})
+        # Получение ID заказа
+        order_id = order_data["id"]
 
-        self.assertEqual(response.status_code, 404, "Expected status code 404 for invalid track number")
-        self.assertEqual(response.json(), {"message": "Заказ не найден"}, "Expected error message for invalid track number")
-        print(f"HTTP/1.1 {response.status_code} {response.reason}")
-        print(self.format_json(response.json()))
 
-    def format_json(self, json_data, indent=0):
-        formatted_output = ""
-        if isinstance(json_data, dict):
-            for key, value in json_data.items():
-                formatted_output += "  " * indent + f"{key}: "
-                formatted_output += self.format_json(value, indent + 1) + "\n"
-        elif isinstance(json_data, list):
-            for item in json_data:
-                formatted_output += self.format_json(item, indent + 1)
-        else:
-            formatted_output += str(json_data)
-        return formatted_output
+        # Теперь принимаем заказ по его ID
+        courier_id = self.create_courier()
+        accept_order_url = f"{self.base_url}/orders/accept/{order_id}?courierId={courier_id}"
+        accept_response = requests.put(accept_order_url)
+
+        # Проверка успешности принятия заказа
+        assert accept_response.status_code == 200, f"Expected status code 200 for accepting the order, but got {accept_response.status_code}"
+        assert accept_response.json().get("ok") is True, "Expected response 'ok' to be True"
+
 
 if __name__ == '__main__':
-    unittest.main(verbosity=2)
+    pytest.main()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 

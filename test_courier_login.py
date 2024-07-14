@@ -1,96 +1,65 @@
-import unittest
-from unittest.mock import patch
+import pytest
+import allure
 import requests
-from test_setup import TestSetup, generate_random_string
+from test_setup import TestSetup
+
 
 class TestCourierLogin(TestSetup):
 
-    @patch('requests.post')
-    def test_successful_login(self, mock_post):
-        # Setup the mock response
-        mock_post.return_value.status_code = 200
-        mock_post.return_value.json.return_value = {"id": 12345}
+    @allure.title("Авторизация нового курьера")
+    def test_successful_login(self):
+        # Создаем нового курьера и получаем его данные для логина
+        response = self.register_new_courier_and_return_login_password()
+        assert response.status_code == 201, f"Expected status code 201 for successful creation, got {response.status_code}"
+
+        # Подготавливаем данные для запроса логина
+        login_payload = {
+            "login": self.created_courier["login"],
+            "password": self.created_courier["password"]
+        }
+
+        # Отправляем запрос на сервер для авторизации курьера
+        response = requests.post(f"{self.base_url}/courier/login", json=login_payload)
+
+        # Проверяем ожидаемый статус код и наличие данных в ответе
+        assert response.status_code == 200, f"Expected status code 200 for successful login, got {response.status_code}"
+        assert "id" in response.json(), "Response should contain 'id'"
+
+
+    @allure.title("Авторизация курьера с одним логином")
+    def test_login_missing_login(self):
+        self.register_new_courier_and_return_login_password()
 
         login_payload = {
-            "login": "ninja",
-            "password": "1234"
+            "password": self.created_courier["password"]
         }
         response = requests.post(f"{self.base_url}/courier/login", json=login_payload)
 
-        self.assertEqual(response.status_code, 200, f"Expected status code 200 for successful login, got {response.status_code}")
-        self.assertIn("id", response.json(), "Response should contain 'id'")
-        self.assertEqual(response.json()["id"], 12345, "Expected courier ID 12345")
+        assert response.status_code == 400, "Expected status code 400 when login is missing"
+        assert "message" in response.json(), "Response should contain 'message'"
+        assert response.json()[
+                   "message"] == "Недостаточно данных для входа", "Expected error message when login is missing"
 
-        # Test result output
-        print(f"HTTP Status Code: {response.status_code}")
-        print(f"JSON Response: {response.json()}")
 
-    @patch('requests.post')
-    def test_login_missing_login(self, mock_post):
-        # Setup the mock response
-        mock_post.return_value.status_code = 400
-        mock_post.return_value.json.return_value = {"message": "Недостаточно данных для входа"}
+    @allure.title("Авторизация курьера с неверным логином")
+    def test_login_invalid_credentials(self):
+        self.register_new_courier_and_return_login_password()
 
         login_payload = {
-            "password": "1234"
-        }
-        response = requests.post(f"{self.base_url}/courier/login", json=login_payload)
-
-        self.assertEqual(response.status_code, 400, "Expected status code 400 when login is missing")
-        self.assertIn("message", response.json(), "Response should contain 'message'")
-        self.assertEqual(response.json()["message"], "Недостаточно данных для входа",
-                         "Expected error message 'Недостаточно данных для входа' when login is missing")
-
-        # Test result output
-        print(f"HTTP Status Code: {response.status_code}")
-        print(f"JSON Response: {response.json()}")
-
-    @patch('requests.post')
-    def test_login_missing_password(self, mock_post):
-        # Setup the mock response
-        mock_post.return_value.status_code = 400
-        mock_post.return_value.json.return_value = {"message": "Недостаточно данных для входа"}
-
-        login_payload = {
-            "login": "ninja"
-        }
-        response = requests.post(f"{self.base_url}/courier/login", json=login_payload)
-
-        self.assertEqual(response.status_code, 400, "Expected status code 400 when password is missing")
-        self.assertIn("message", response.json(), "Response should contain 'message'")
-        self.assertEqual(response.json()["message"], "Недостаточно данных для входа",
-                         "Expected error message 'Недостаточно данных для входа' when password is missing")
-
-        # Test result output
-        print(f"HTTP Status Code: {response.status_code}")
-        print(f"JSON Response: {response.json()}")
-
-    @patch('requests.post')
-    def test_login_invalid_credentials(self, mock_post):
-        # Setup the mock response
-        mock_post.return_value.status_code = 404
-        mock_post.return_value.json.return_value = {"message": "Учетная запись не найдена"}
-
-        login_payload = {
-            "login": "ninja",
+            "login": self.created_courier["login"],
             "password": "wrongpassword"
         }
         response = requests.post(f"{self.base_url}/courier/login", json=login_payload)
 
-        self.assertEqual(response.status_code, 404, "Expected status code 404 for invalid credentials")
-        self.assertIn("message", response.json(), "Response should contain 'message'")
-        self.assertEqual(response.json()["message"], "Учетная запись не найдена",
-                         "Expected error message 'Учетная запись не найдена' for invalid credentials")
+        assert response.status_code == 404, "Expected status code 404 for invalid credentials"
+        assert "message" in response.json(), "Response should contain 'message'"
+        assert response.json()[
+                   "message"] == "Учетная запись не найдена", "Expected error message for invalid credentials"
 
-        # Test result output
-        print(f"HTTP Status Code: {response.status_code}")
-        print(f"JSON Response: {response.json()}")
 
-    @patch('requests.post')
-    def test_login_nonexistent_user(self, mock_post):
-        # Setup the mock response
-        mock_post.return_value.status_code = 404
-        mock_post.return_value.json.return_value = {"message": "Учетная запись не найдена"}
+    @allure.title("Авторизация курьера под несуществующим пользователем")
+    def test_login_nonexistent_user(self):
+        self.register_new_courier_and_return_login_password()
 
         login_payload = {
             "login": "nonexistent_user",
@@ -98,14 +67,19 @@ class TestCourierLogin(TestSetup):
         }
         response = requests.post(f"{self.base_url}/courier/login", json=login_payload)
 
-        self.assertEqual(response.status_code, 404, "Expected status code 404 for nonexistent user")
-        self.assertIn("message", response.json(), "Response should contain 'message'")
-        self.assertEqual(response.json()["message"], "Учетная запись не найдена",
-                         "Expected error message 'Учетная запись не найдена' for nonexistent user")
+        assert response.status_code == 404, "Expected status code 404 for nonexistent user"
+        assert "message" in response.json(), "Response should contain 'message'"
+        assert response.json()["message"] == "Учетная запись не найдена", "Expected error message for nonexistent user"
 
-        # Test result output
-        print(f"HTTP Status Code: {response.status_code}")
-        print(f"JSON Response: {response.json()}")
+
 
 if __name__ == "__main__":
-    unittest.main()
+    pytest.main()
+
+
+
+
+
+
+
+

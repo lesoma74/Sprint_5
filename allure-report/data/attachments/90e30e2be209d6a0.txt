@@ -1,3 +1,0 @@
-HTTP Status Code: 201
-Created courier details: Login - ccfloundxh, Password - xoidqgjrwm, First Name - wswsyhjatn
-JSON Response: {'ok': True}

@@ -1,32 +1,34 @@
-# test_orders_list.py
-
-import unittest
-from unittest.mock import patch
+import pytest
+import allure
 import requests
-from data import orders_list_response, orders_list_not_found_response
 from test_setup import TestSetup
+
 
 class TestOrdersList(TestSetup):
 
-    @patch('requests.get')
-    def test_get_orders_list(self, mock_get):
-        mock_get.return_value.status_code = 200
-        mock_get.return_value.json.return_value = orders_list_response
+    @allure.title("Получение списка заказов")
+    def test_get_orders_list(self):
+        response = requests.get(f"{self.base_url}/orders")
 
-        response = requests.get(self.base_url + '/orders')
-        self.assertEqual(response.status_code, 200, "Expected status code 200 for successful orders list retrieval")
-        self.assertEqual(response.json(), orders_list_response, "Expected orders list response")
-        print(f"HTTP/1.1 {response.status_code} {response.json()}")
+        assert response.status_code == 200, "Expected status code 200 for successful orders list retrieval"
 
-    @patch('requests.get')
-    def test_get_orders_list_with_nonexistent_courier(self, mock_get):
-        mock_get.return_value.status_code = 404
-        mock_get.return_value.json.return_value = orders_list_not_found_response
+        try:
+            orders = response.json().get("orders", [])
+            assert isinstance(orders, list), "'orders' should be a list"
+        except Exception as e:
+            pytest.fail(f"Error parsing response: {e}")
 
-        response = requests.get(self.base_url + '/orders?courierId=999')
-        self.assertEqual(response.status_code, 404, "Expected status code 404 for nonexistent courierId")
-        self.assertEqual(response.json(), orders_list_not_found_response, "Expected courier not found response")
-        print(f"HTTP/1.1 {response.status_code} {response.json()}")
+        # Проверка, что в каждом заказе нет ключа 'courierId' или его значение None
+        for order in orders:
+            assert "courierId" not in order or order[
+                "courierId"] is None, "Expected 'courierId' to be absent or None in each order"
+
 
 if __name__ == '__main__':
-    unittest.main(verbosity=2)
+    pytest.main()
+
+
+
+
+
+

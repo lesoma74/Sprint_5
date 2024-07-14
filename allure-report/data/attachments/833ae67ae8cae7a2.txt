@@ -1,2 +1,0 @@
-HTTP Status Code: 409
-JSON Response: {'message': 'Этот логин уже используется'}

@@ -1,2 +1,0 @@
-HTTP Status Code: 404
-JSON Response: {'message': 'Учетная запись не найдена'}

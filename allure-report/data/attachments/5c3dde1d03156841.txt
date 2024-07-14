@@ -1,2 +1,0 @@
-HTTP Status Code: 400
-JSON Response: {'message': 'Недостаточно данных для входа'}

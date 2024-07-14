@@ -1,4 +1,0 @@
-
-Test case for color NONE:
-Response status code: 201
-Response body: {'track': 124124}
