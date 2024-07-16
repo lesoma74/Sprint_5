@@ -9,8 +9,10 @@ from data import (
 )
 from test_setup import TestSetup
 
+@pytest.mark.usefixtures("setup_teardown")
+class TestOrderCreation:
 
-class TestOrderCreation(TestSetup):
+    setup: TestSetup  # Аннотация типа для self.setup
 
     @pytest.mark.parametrize("name, payload", [
         ("BLACK", order_with_color_BLACK),
@@ -20,16 +22,10 @@ class TestOrderCreation(TestSetup):
     ])
     @allure.title("Создание ордера с разными цветами самоката")
     def test_create_order_with_various_colors(self, name, payload):
-        response = requests.post(self.base_url + '/orders', json=payload)
+        response = requests.post(self.setup.base_url + '/orders', json=payload)
 
         assert response.status_code == 201, f"Expected status code 201 for successful order creation with color {name}"
         assert "track" in response.json(), f"Response should contain 'track' for color {name}"
-
-
-
-if __name__ == '__main__':
-    pytest.main()
-
 
 
 

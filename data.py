@@ -147,3 +147,16 @@ class ResponseMessages:
     INVALID_COURIER_ID = {"message": "Курьера с таким id не существует"}
     MISSING_ORDER_ID = {"message": "Недостаточно данных для поиска"}
     INVALID_ORDER_ID = {"message": "Заказа с таким id не существует"}
+
+# Payload для создания заказа
+order_payload = {
+    "firstName": "Иван",
+    "lastName": "Иванов",
+    "address": "Москва, Красная площадь, 1",
+    "metroStation": 1,
+    "phone": "+79999999999",
+    "rentTime": 5,
+    "deliveryDate": "2023-07-10",
+    "comment": "Тестовый заказ",
+    "color": ["BLACK"]
+}

@@ -7,12 +7,6 @@ class TestSetup:
     base_url = 'https://qa-scooter.praktikum-services.ru/api/v1'
     created_courier = None
 
-    @pytest.fixture(autouse=True)
-    def setup_teardown(self):
-        self.setup_method()
-        yield
-        self.teardown_method()
-
     def setup_method(self):
         self.created_courier = None
 
@@ -70,8 +64,7 @@ class TestSetup:
         }
 
         response = requests.post(f"{self.base_url}/courier", json=payload)
-        print(f"Create courier response status code: {response.status_code}")
-        print(f"Create courier response body: {response.json()}")
+
 
         if response.status_code == 201:
             # Пытаемся получить id курьера через авторизацию

@@ -4,14 +4,15 @@ import requests
 from data import order_with_color_BLACK
 from test_setup import TestSetup
 
-
-class TestOrderCreationAndRetrieval(TestSetup):
+@pytest.mark.usefixtures("setup_teardown")
+class TestOrderCreationAndRetrieval:
+    setup: TestSetup  # Аннотация типа для self.setup
 
     @allure.title("Получение заказа по его номеру")
     def test_create_and_get_order_by_track_number(self):
         # Создание заказа с определённым цветом (BLACK, например)
         payload = order_with_color_BLACK
-        response = requests.post(self.base_url + '/orders', json=payload)
+        response = requests.post(self.setup.base_url + '/orders', json=payload)
 
         # Проверка успешности создания заказа
         assert response.status_code == 201, "Expected status code 201 for successful order creation"
@@ -23,7 +24,7 @@ class TestOrderCreationAndRetrieval(TestSetup):
 
 
         # Получение заказа по трек номеру
-        response = requests.get(f"{self.base_url}/orders/track?t={track_number}")
+        response = requests.get(f"{self.setup.base_url}/orders/track?t={track_number}")
 
         # Проверка успешности получения заказа
         assert response.status_code == 200, f"Expected status code 200, but got {response.status_code}"
@@ -36,8 +37,8 @@ class TestOrderCreationAndRetrieval(TestSetup):
 
 
         # Теперь принимаем заказ по его ID
-        courier_id = self.create_courier()
-        accept_order_url = f"{self.base_url}/orders/accept/{order_id}?courierId={courier_id}"
+        courier_id = self.setup.create_courier()
+        accept_order_url = f"{self.setup.base_url}/orders/accept/{order_id}?courierId={courier_id}"
         accept_response = requests.put(accept_order_url)
 
         # Проверка успешности принятия заказа
@@ -45,8 +46,6 @@ class TestOrderCreationAndRetrieval(TestSetup):
         assert accept_response.json().get("ok") is True, "Expected response 'ok' to be True"
 
 
-if __name__ == '__main__':
-    pytest.main()
 
 
 

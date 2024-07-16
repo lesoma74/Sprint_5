@@ -1,6 +1,7 @@
 import pytest
 import allure
 import requests
+from data import order_payload
 from test_setup import TestSetup
 
 class TestAcceptOrder:
@@ -14,18 +15,7 @@ class TestAcceptOrder:
         courier_id = self.setup.create_courier()
         assert courier_id is not None, "Failed to create courier for the test"
 
-        # Создаем новый заказ для теста
-        order_payload = {
-            "firstName": "Иван",
-            "lastName": "Иванов",
-            "address": "Москва, Красная площадь, 1",
-            "metroStation": 1,
-            "phone": "+79999999999",
-            "rentTime": 5,
-            "deliveryDate": "2023-07-10",
-            "comment": "Тестовый заказ",
-            "color": ["BLACK"]
-        }
+
         create_order_url = f"{self.setup.base_url}/orders"
         create_order_response = requests.post(create_order_url, json=order_payload)
         assert create_order_response.status_code == 201, f"Failed to create order, status code: {create_order_response.status_code}"

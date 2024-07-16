@@ -1,0 +1,4 @@
+Create courier response status code: 201
+Create courier response body: {'ok': True}
+Login courier response status code: 200
+Login courier response body: {'id': 349353}
