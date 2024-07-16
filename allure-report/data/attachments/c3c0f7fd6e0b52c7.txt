@@ -1,0 +1,4 @@
+Login courier response status code: 200
+Login courier response body: {'id': 349356}
+Login courier response status code: 200
+Login courier response body: {'id': 349356}
